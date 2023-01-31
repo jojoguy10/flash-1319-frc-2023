@@ -16,7 +16,7 @@ public class CommandDriveBase extends CommandBase {
         double y;
         x = m_XboxController.getLeftY();
         y = m_XboxController.getRightX();
-        m_Base.drive(0, 0);
+        m_Base.drive(x, y);
     }
 
     @Override
