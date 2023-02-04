@@ -4,10 +4,16 @@
 
 package frc.robot;
 
+import javax.print.attribute.standard.Compression;
+
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,20 +26,21 @@ import edu.wpi.first.wpilibj.util.WPILibVersion;
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
-  private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   private final WPI_TalonFX m_leftMotor1 = new WPI_TalonFX(1);
   private final WPI_TalonFX m_leftMotor2 = new WPI_TalonFX(2);
   private final WPI_TalonFX m_rightMotor1 = new WPI_TalonFX(3);
-  private final WPI_TalonFX m_rightMotor2 = new WPI_TalonFX(3);
+  private final WPI_TalonFX m_rightMotor2 = new WPI_TalonFX(4);
 
-  private DifferentialDrive m_robotDrive;
+  private DifferentialDrive m_robotDrive ;
 
-  private final Joystick m_Joystick = new Joystick(0);
+  private final XboxController m_Joystick = new XboxController(0);
 
+  private final Compressor m_Compressor = new Compressor(0,PneumaticsModuleType.CTREPCM);
+
+  private final Solenoid m_shifter = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+ 
+  private boolean shift = false; 
 
 
   /**
@@ -42,17 +49,22 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
-
+  
     m_leftMotor1.setInverted(true);
     m_leftMotor2.setInverted(true);
+
+    m_rightMotor1.setInverted(true);
+    m_rightMotor2.setInverted(true);
+
 
     m_leftMotor2.follow(m_leftMotor1);
     m_rightMotor2.follow(m_rightMotor1);
 
-    m_robotDrive.arcadeDrive(kDefaultPeriod, kDefaultPeriod);
+    m_robotDrive = new DifferentialDrive(m_leftMotor1, m_rightMotor1);
+
+    m_Compressor.enableDigital();
+
+
   }
 
   /**
@@ -63,7 +75,16 @@ public class Robot extends TimedRobot {
    * SmartDashboard integrated updating.
    */
   @Override
-  public void robotPeriodic() {}
+  public void robotPeriodic() {
+    m_robotDrive.arcadeDrive(m_Joystick.getRightX(),m_Joystick.getLeftY());
+    m_shifter.set(m_Joystick.getAButton());
+    if (m_Joystick.getRightBumperPressed()){
+      shift = false;
+    }else if (m_Joystick.getLeftBumperPressed()){
+      shift = true;
+    }
+    m_shifter.set(shift);
+  }
 
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
@@ -76,25 +97,11 @@ public class Robot extends TimedRobot {
    * chooser code above as well.
    */
   @Override
-  public void autonomousInit() {
-    m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-    System.out.println("Auto selected: " + m_autoSelected);
-  }
+  public void autonomousInit() {}
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
-  }
+  public void autonomousPeriodic() {}
 
   /** This function is called once when teleop is enabled. */
   @Override
