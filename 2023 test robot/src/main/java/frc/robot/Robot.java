@@ -4,9 +4,14 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.WPILibVersion;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -20,6 +25,17 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+  private final WPI_TalonFX m_leftMotor1 = new WPI_TalonFX(1);
+  private final WPI_TalonFX m_leftMotor2 = new WPI_TalonFX(2);
+  private final WPI_TalonFX m_rightMotor1 = new WPI_TalonFX(3);
+  private final WPI_TalonFX m_rightMotor2 = new WPI_TalonFX(3);
+
+  private DifferentialDrive m_robotDrive;
+
+  private final Joystick m_Joystick = new Joystick(0);
+
+
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -29,6 +45,14 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
+    m_leftMotor1.setInverted(true);
+    m_leftMotor2.setInverted(true);
+
+    m_leftMotor2.follow(m_leftMotor1);
+    m_rightMotor2.follow(m_rightMotor1);
+
+    m_robotDrive.arcadeDrive(kDefaultPeriod, kDefaultPeriod);
   }
 
   /**
