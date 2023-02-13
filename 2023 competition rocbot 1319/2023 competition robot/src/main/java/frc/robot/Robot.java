@@ -65,8 +65,6 @@ private boolean brake = false;
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
 
- private final XboxController dpadDownButton = new XboxController(() -> Drive.getPOV() == 180);
-
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
