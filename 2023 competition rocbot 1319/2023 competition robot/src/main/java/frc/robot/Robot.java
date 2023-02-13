@@ -4,7 +4,19 @@
 
 package frc.robot;
 
+import java.sql.Driver;
+
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.PS4Controller.Button;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -19,11 +31,41 @@ public class Robot extends TimedRobot {
   private static final String kCustomAuto = "My Auto";
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
+//Drive base Motors
+  private final CANSparkMax leftMotor1 = new CANSparkMax(1, MotorType.kBrushless);
+  private final CANSparkMax leftMotor2 = new CANSparkMax(2, MotorType.kBrushless);
+  private final CANSparkMax rightMotor1 = new CANSparkMax(3, MotorType.kBrushless);
+  private final CANSparkMax rightMotor2 = new CANSparkMax(4, MotorType.kBrushless);
+//Shoulder Motors
+  private final CANSparkMax shoulderM1 = new CANSparkMax(5, MotorType.kBrushless);
+//private final CANSparkMax shoulderM2 = new CANSparkMax(6, MotorType.kBrushless);
 
-  private final 
+//Intake Motors
+  private final CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushless);
+  private final CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushless);
 
+// Telescoping Motor
+  private final CANSparkMax telescopingM1 = new CANSparkMax(9, MotorType.kBrushless);
 
+  // Compressor and Pneumatics
+  private final Compressor  m_Compressor = new Compressor(0,PneumaticsModuleType.CTREPCM);
 
+private final Solenoid m_shifter = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+private final Solenoid m_intake = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
+private final Solenoid m_gripper  = new Solenoid(PneumaticsModuleType.CTREPCM, 3);
+private final Solenoid m_brake = new Solenoid(PneumaticsModuleType.CTREPCM, 4);
+
+private boolean shifter = false; 
+private boolean intake = false;
+private boolean gripper = false;
+private boolean brake = false;
+
+  private DifferentialDrive robotDrive;
+
+  private final XboxController Driver = new XboxController(0);
+  private final XboxController Operator = new XboxController(1);
+
+ private final XboxController dpadDownButton = new XboxController(() -> Drive.getPOV() == 180);
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -31,9 +73,14 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-    m_chooser.addOption("My Auto", kCustomAuto);
-    SmartDashboard.putData("Auto choices", m_chooser);
+
+    leftMotor1.setInverted(true);
+    leftMotor2.setInverted(true);
+
+    leftMotor2.follow(leftMotor1);
+    rightMotor2.follow(rightMotor1);
+
+
   }
 
   /**
@@ -44,7 +91,9 @@ public class Robot extends TimedRobot {
    * SmartDashboard integrated updating.
    */
   @Override
-  public void robotPeriodic() {}
+  public void robotPeriodic() {
+    
+  }
 
   /**
    * This autonomous (along with the chooser code above) shows how to select between different
@@ -83,7 +132,60 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+    robotDrive.arcadeDrive(Driver.getRightX(), Driver.getLeftY());
+    
+     if(Driver.getLeftBumperPressed()){
+      shifter = true;
+     }else if(Driver.getRightBumperPressed()){
+      shifter = false;
+     }
+
+     if(Operator.getYButtonPressed()){
+      intake = true;
+     }else if(Operator.getAButtonPressed()){
+      intake = false;
+     }
+
+     if(Operator.getRightBumperPressed()){
+      brake = true;
+     }else if(Operator.getLeftBumperPressed()){
+      brake = false;
+      }
+
+      if(Operator.getBButtonPressed()){
+      gripper = true;
+      }else if(Operator.getXButtonPressed()){
+      gripper = false;
+      }
+
+      if (Operator.getRightBumper()){
+      intakeM1.set(0.75);
+      intakeM2.set(0.75);
+     }else if(Operator.getLeftBumper()){
+      intakeM1.set(-0.75);
+      intakeM2.set(-0.75);
+     }else{
+      intakeM1.set(0);
+      intakeM2.set(0);
+      }
+
+     if(Operator.getStartButton()){
+      telescopingM1.set(0.75);
+     }else if(Operator.getBackButton()){
+      telescopingM1.set(-0.75);
+      }else{
+      telescopingM1.set(0);
+      }
+      
+      if(Operator.getPOV() == 0){
+        shoulderM1.set(0.75);
+      }else if(Operator.getPOV() == 180){
+        shoulderM1.set(-0.75);
+      }else{
+        shoulderM1.set(0);
+      }
+    }
 
   /** This function is called once when the robot is disabled. */
   @Override

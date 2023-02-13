@@ -48,13 +48,13 @@ public class Robot extends TimedRobot {
   private DifferentialDrive m_robotDrive ;
 
   private final XboxController m_Joystick = new XboxController(0);
+  private final XboxController m_JoystickOP = new XboxController(1);
 
   private final Compressor m_Compressor = new Compressor(0,PneumaticsModuleType.CTREPCM);
 
   private final Solenoid m_shifter = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
  
   private boolean shift = false; 
-
   private double autoSpeed = 0.25;
 
   private final DigitalInput bottomlimitSwitch = new DigitalInput(4);
@@ -156,37 +156,42 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+
+   m_robotDrive.arcadeDrive((m_Joystick.getRawAxis(1)* .5),
+  (m_Joystick.getRawAxis(5)* .5));
+
     m_robotDrive.arcadeDrive(m_Joystick.getRightX(),m_Joystick.getLeftY());
     m_shifter.set(m_Joystick.getAButton());
     if (m_Joystick.getRightBumperPressed()){
+       shift = true;
+       shift = false;
+    }else{
       shift = false;
-    }else if (m_Joystick.getLeftBumperPressed()){
-      shift = true;
     }
     m_shifter.set(shift);
 
     
-    if (m_Joystick.getAButton()){
+    if (m_JoystickOP.getAButton()){
       //levelsMotor.set(ControlMode.PercentOutput, 0.25);
       setMotorSpeed(0.25);
 
-    }else if (m_Joystick.getYButton()){
+    }else if (m_JoystickOP.getYButton()){
       //levelsMotor.set(ControlMode.PercentOutput, 0);
       setMotorSpeed(-0.25);
     }else{
       setMotorSpeed(0);
     }
 
-    if (m_Joystick.getXButton()){
+    if (m_JoystickOP.getXButton()){
       theTurret.set(0.25);
     } 
-    else if(m_Joystick.getBButton()){
+    else if(m_JoystickOP.getBButton()){
       theTurret.set(-0.25);
     }else{
       theTurret.set(0);
     }
 
-    if(m_Joystick.getStartButton()){
+    if(m_JoystickOP.getStartButton()){
       spinerMotor1.set(0.50);
       spinerMotor2.set(0.50);
       intake.set(1);
