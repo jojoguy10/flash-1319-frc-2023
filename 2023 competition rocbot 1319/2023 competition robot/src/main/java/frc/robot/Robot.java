@@ -60,7 +60,7 @@ private boolean intake = false;
 private boolean gripper = false;
 private boolean brake = false;
 
-  private DifferentialDrive robotDrive;
+  private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1,rightMotor1);
 
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
@@ -131,7 +131,7 @@ private boolean brake = false;
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    robotDrive.arcadeDrive(Driver.getRightX(), Driver.getLeftY());
+    robotDrive.arcadeDrive(-Driver.getLeftY(),-Driver.getRightX());
     
      if(Driver.getLeftBumperPressed()){
       shifter = true;
@@ -157,10 +157,10 @@ private boolean brake = false;
       gripper = false;
       }
 
-      if (Operator.getRightBumper()){
+      if (Operator.getPOV() == 90){
       intakeM1.set(0.75);
       intakeM2.set(0.75);
-     }else if(Operator.getLeftBumper()){
+     }else if(Operator.getPOV() == 270){
       intakeM1.set(-0.75);
       intakeM2.set(-0.75);
      }else{

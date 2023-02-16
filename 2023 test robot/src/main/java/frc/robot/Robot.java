@@ -5,6 +5,8 @@
 package frc.robot;
 
 import javax.print.attribute.standard.Compression;
+import javax.swing.plaf.basic.BasicTreeUI.TreeToggleAction;
+import javax.swing.plaf.metal.MetalBorders.ToggleButtonBorder;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
@@ -162,13 +164,11 @@ public class Robot extends TimedRobot {
 
     m_robotDrive.arcadeDrive(m_Joystick.getRightX(),m_Joystick.getLeftY());
     m_shifter.set(m_Joystick.getAButton());
-    if (m_Joystick.getRightBumperPressed()){
-       shift = true;
-       shift = false;
-    }else{
-      shift = false;
+    if(m_Joystick.getrightBumber()){
+      shift = true;
+    }else if(m_Joystick.getRightBumperPressed()){
+      shift = true;
     }
-    m_shifter.set(shift);
 
     
     if (m_JoystickOP.getAButton()){
