@@ -56,6 +56,7 @@ public class Robot extends TimedRobot {
 
   private final Solenoid m_shifter = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
  
+  private boolean toggleShifter = false;
   private boolean shift = false; 
   private double autoSpeed = 0.25;
 
@@ -164,11 +165,22 @@ public class Robot extends TimedRobot {
 
     m_robotDrive.arcadeDrive(m_Joystick.getRightX(),m_Joystick.getLeftY());
     m_shifter.set(m_Joystick.getAButton());
-    if(m_Joystick.getrightBumber()){
+    if(toggleShifter == true){
       shift = true;
-    }else if(m_Joystick.getRightBumperPressed()){
-      shift = true;
+    }else{
+      shift = false;
     }
+
+    if(m_Joystick.getRightBumperPressed()){
+      if(toggleShifter == true){
+        toggleShifter = false;
+      }else{
+        toggleShifter = true;
+      }
+    }
+
+  
+
 
     
     if (m_JoystickOP.getAButton()){
