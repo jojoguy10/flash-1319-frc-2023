@@ -4,25 +4,22 @@
 
 package frc.robot;
 
-import javax.print.attribute.standard.Compression;
-import javax.swing.plaf.basic.BasicTreeUI.TreeToggleAction;
-import javax.swing.plaf.metal.MetalBorders.ToggleButtonBorder;
-
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.sensors.PigeonIMU;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.WPILibVersion;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.commands.CommandBalance;
+import frc.robot.commands.CommandBalance2;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -47,7 +44,7 @@ public class Robot extends TimedRobot {
   private final WPI_TalonSRX levelsMotor = new WPI_TalonSRX(12);
   private final WPI_TalonSRX theTurret = new WPI_TalonSRX(8);
 
-  private DifferentialDrive m_robotDrive ;
+  public DifferentialDrive m_robotDrive;
 
   private final XboxController m_Joystick = new XboxController(0);
   private final XboxController m_JoystickOP = new XboxController(1);
@@ -55,7 +52,8 @@ public class Robot extends TimedRobot {
   private final Compressor m_Compressor = new Compressor(0,PneumaticsModuleType.CTREPCM);
 
   private final Solenoid m_shifter = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
- 
+  public final PigeonIMU imu = new PigeonIMU(25);
+  public double startPitch = 0;
   private boolean toggleShifter = false;
   private boolean shift = false; 
   private double autoSpeed = 0.25;
@@ -65,18 +63,18 @@ public class Robot extends TimedRobot {
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
+
   @Override
   public void robotInit() {
   
-    m_leftMotor1.setInverted(true);
-    m_leftMotor2.setInverted(true);
+    //m_leftMotor1.setInverted(true);
+    //m_leftMotor2.setInverted(true);
 
     m_rightMotor1.setInverted(true);
     m_rightMotor2.setInverted(true);
 
     spinerMotor2.setInverted(true);
     intake.setInverted(true);
-
 
     m_leftMotor2.follow(m_leftMotor1);
     m_rightMotor2.follow(m_rightMotor1);
@@ -89,7 +87,7 @@ public class Robot extends TimedRobot {
     m_leftMotor2.setSelectedSensorPosition(0,0,0);
     m_rightMotor1.setSelectedSensorPosition(0,0,0);
     m_rightMotor2.setSelectedSensorPosition(0,0,0);
-
+    startPitch = imu.getPitch();
   }
 
   /**
@@ -101,9 +99,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    
-
-
     SmartDashboard.putNumber("Joystick x Left value.", m_Joystick.getLeftX());
     SmartDashboard.putNumber("Joystick x Right value.", m_Joystick.getRightX());
     SmartDashboard.putNumber("Joystick y Right value.", m_Joystick.getRightY());
@@ -113,7 +108,11 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("R motor 1  encoder.", m_rightMotor1.getSelectedSensorPosition(0));
     SmartDashboard.putNumber("R motor 2 encoder.", m_rightMotor2.getSelectedSensorPosition(0));
     SmartDashboard.putNumber("levels Motor", levelsMotor.getSelectedSensorPosition(0));
+    double[] ypr = new double[3];
+    imu.getYawPitchRoll(ypr);
+    SmartDashboard.putNumberArray("Gyro Data", ypr);
 
+    CommandScheduler.getInstance().run();
   }
 
   /**
@@ -126,12 +125,16 @@ public class Robot extends TimedRobot {
    * below with additional strings. If using the SendableChooser make sure to add them to the
    * chooser code above as well.
    */
+  Command auto;
   @Override
+  
   public void autonomousInit() {
     m_leftMotor1.setSelectedSensorPosition(0,0,0);
     m_leftMotor2.setSelectedSensorPosition(0,0,0);
     m_rightMotor1.setSelectedSensorPosition(0,0,0);
     m_rightMotor2.setSelectedSensorPosition(0,0,0);
+    auto = new CommandBalance2(this);
+    auto.schedule();
   }
 
   /** This function is called periodically during autonomous. */
@@ -143,11 +146,13 @@ public class Robot extends TimedRobot {
      }else{
       autoSpeed = 0.25;
      }
-     //m_robotDrive.arcadeDrive(autoSpeed, 0);
-     m_leftMotor1.set(ControlMode.PercentOutput, autoSpeed);
-     m_leftMotor2.set(ControlMode.PercentOutput, autoSpeed);
-     m_rightMotor1.set(ControlMode.PercentOutput, -autoSpeed);
-     m_rightMotor2.set(ControlMode.PercentOutput, -autoSpeed);
+     if(!auto.isScheduled()) {
+      m_robotDrive.arcadeDrive(0, 0);
+     }
+     //m_leftMotor1.set(ControlMode.PercentOutput, autoSpeed);
+     //m_leftMotor2.set(ControlMode.PercentOutput, autoSpeed);
+     //m_rightMotor1.set(ControlMode.PercentOutput, -autoSpeed);
+     //m_rightMotor2.set(ControlMode.PercentOutput, -autoSpeed);
 
 
   }
