@@ -1,0 +1,26 @@
+Motors:
+1 Left Motor 1 (Neo)
+2 Left Motor 2 (Neo)
+3 Right Motor 1 (Neo)
+4 Right Motor 2 (Neo)
+5 Shoulder 1 (Neo)
+6 Shoulder 2 (Neo)
+7 Intake 1 (bag motor)
+8 Intake 2 (bag motor)
+9 Telescope (Neo)
+
+Solenoids:
+1 Shifter
+2 Intake Up/Down
+3 Gripper In/Out
+4 Corner Brakes
+
+Sensors:
+* Pigeon 2.0
+* Shoulder limit switches up/down
+* Shoulder encoder
+* Drivetrain encoders (left/right)
+* Limelight
+* Telescope encoder
+* Telescope limit switches (advance/return)
+* Pressure Transducer (Andymark) (In PCM)
