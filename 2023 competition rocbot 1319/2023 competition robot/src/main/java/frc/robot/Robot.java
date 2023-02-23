@@ -27,38 +27,39 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * project.
  */
 public class Robot extends TimedRobot {
-  private static final String kDefaultAuto = "Default";
-  private static final String kCustomAuto = "My Auto";
+  private final static String kDefaultAuto = "Default";
+  private final static String kCustomAuto = "My Auto";
   private String m_autoSelected;
-  private final SendableChooser<String> m_chooser = new SendableChooser<>();
-//Drive base Motors
-  private final CANSparkMax leftMotor1 = new CANSparkMax(1, MotorType.kBrushless);
-  private final CANSparkMax leftMotor2 = new CANSparkMax(2, MotorType.kBrushless);
-  private final CANSparkMax rightMotor1 = new CANSparkMax(3, MotorType.kBrushless);
-  private final CANSparkMax rightMotor2 = new CANSparkMax(4, MotorType.kBrushless);
-//Shoulder Motors
-  private final CANSparkMax shoulderM1 = new CANSparkMax(5, MotorType.kBrushless);
-//private final CANSparkMax shoulderM2 = new CANSparkMax(6, MotorType.kBrushless);
+  private SendableChooser<String> m_chooser = new SendableChooser<>();
+  //Drive base Motors
+  private CANSparkMax leftMotor1 = new CANSparkMax(1, MotorType.kBrushless);
+  private CANSparkMax leftMotor2 = new CANSparkMax(2, MotorType.kBrushless);
+  private CANSparkMax rightMotor1 = new CANSparkMax(3, MotorType.kBrushless);
+  private CANSparkMax rightMotor2 = new CANSparkMax(4, MotorType.kBrushless);
+  //Shoulder Motors
+  private CANSparkMax shoulderM1 = new CANSparkMax(5, MotorType.kBrushless);
+  //private CANSparkMax shoulderM2 = new CANSparkMax(6, MotorType.kBrushless);
 
-//Intake Motors
-  private final CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushless);
-  private final CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushless);
+  //Intake Motors
+  private CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushed);
+  private CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushed);
 
-// Telescoping Motor
-  private final CANSparkMax telescopingM1 = new CANSparkMax(9, MotorType.kBrushless);
+  // Telescoping Motor
+  private CANSparkMax telescopingM1 = new CANSparkMax(9, MotorType.kBrushless);
 
   // Compressor and Pneumatics
-  private final Compressor  m_Compressor = new Compressor(0,PneumaticsModuleType.CTREPCM);
+  private Compressor m_Compressor = new Compressor(1,PneumaticsModuleType.REVPH);
 
-private final Solenoid m_shifter = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
-private final Solenoid m_intake = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
-private final Solenoid m_gripper  = new Solenoid(PneumaticsModuleType.CTREPCM, 3);
-private final Solenoid m_brake = new Solenoid(PneumaticsModuleType.CTREPCM, 4);
+  private Solenoid m_shifter = new Solenoid(PneumaticsModuleType.REVPH, 1);
+  private Solenoid m_intake = new Solenoid(PneumaticsModuleType.REVPH, 2);
+  private Solenoid m_gripper  = new Solenoid(PneumaticsModuleType.REVPH, 3);
+  private Solenoid m_brake = new Solenoid(PneumaticsModuleType.REVPH, 4);
+  //private Solenoid m_SPARE = new Solenoid(PneumaticsModuleType.REVPH, 5);
 
-private boolean shifter = false; 
-private boolean intake = false;
-private boolean gripper = false;
-private boolean brake = false;
+  private boolean shifter = false; 
+  private boolean intake = false;
+  private boolean gripper = false;
+  private boolean brake = false;
 
   private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1,rightMotor1);
 
@@ -74,6 +75,7 @@ private boolean brake = false;
 
     leftMotor1.setInverted(true);
     leftMotor2.setInverted(true);
+    intakeM2.setInverted(true);
 
     leftMotor2.follow(leftMotor1);
     rightMotor2.follow(rightMotor1);
@@ -90,7 +92,7 @@ private boolean brake = false;
    */
   @Override
   public void robotPeriodic() {
-    
+    m_Compressor.enableDigital();
   }
 
   /**
@@ -126,64 +128,69 @@ private boolean brake = false;
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+  }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
     robotDrive.arcadeDrive(-Driver.getLeftY(),-Driver.getRightX());
     
-     if(Driver.getLeftBumperPressed()){
+    if(Driver.getLeftBumperPressed()){
       shifter = true;
-     }else if(Driver.getRightBumperPressed()){
+    } else if(Driver.getRightBumperPressed()){
       shifter = false;
-     }
+    }
+    m_shifter.set(shifter);
 
-     if(Operator.getYButtonPressed()){
+    if(Operator.getYButtonPressed()){
       intake = true;
-     }else if(Operator.getAButtonPressed()){
+    } else if(Operator.getAButtonPressed()){
       intake = false;
-     }
+    }
+    m_intake.set(intake);
 
-     if(Operator.getRightBumperPressed()){
+    if(Operator.getRightBumperPressed()){
       brake = true;
-     }else if(Operator.getLeftBumperPressed()){
+    } else if(Operator.getLeftBumperPressed()){
       brake = false;
-      }
+    }
+    m_brake.set(brake);
 
-      if(Operator.getBButtonPressed()){
+    if(Operator.getBButtonPressed()){
       gripper = true;
-      }else if(Operator.getXButtonPressed()){
+    } else if(Operator.getXButtonPressed()){
       gripper = false;
-      }
+    }
+    m_gripper.set(gripper);
 
-      if (Operator.getPOV() == 90){
+    if (Operator.getPOV() == 90){
       intakeM1.set(0.75);
       intakeM2.set(0.75);
-     }else if(Operator.getPOV() == 270){
+    }else if(Operator.getPOV() == 270){
       intakeM1.set(-0.75);
       intakeM2.set(-0.75);
-     }else{
+    }else{
       intakeM1.set(0);
       intakeM2.set(0);
-      }
-
-     if(Operator.getStartButton()){
-      telescopingM1.set(0.75);
-     }else if(Operator.getBackButton()){
-      telescopingM1.set(-0.75);
-      }else{
-      telescopingM1.set(0);
-      }
-      
-      if(Operator.getPOV() == 0){
-        shoulderM1.set(0.75);
-      }else if(Operator.getPOV() == 180){
-        shoulderM1.set(-0.75);
-      }else{
-        shoulderM1.set(0);
-      }
     }
+
+    if(Operator.getStartButton()){
+      telescopingM1.set(0.75);
+    }else if(Operator.getBackButton()){
+      telescopingM1.set(-0.75);
+    }else{
+      telescopingM1.set(0);
+    }
+      
+    if(Operator.getPOV() == 0){
+      shoulderM1.set(0.75);
+    }else if(Operator.getPOV() == 180){
+      shoulderM1.set(-0.75);
+    }else{
+      shoulderM1.set(0);
+    }
+  }
 
   /** This function is called once when the robot is disabled. */
   @Override
