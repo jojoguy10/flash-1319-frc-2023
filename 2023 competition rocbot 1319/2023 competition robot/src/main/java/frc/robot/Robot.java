@@ -60,6 +60,7 @@ public class Robot extends TimedRobot {
   private boolean intake = false;
   private boolean gripper = false;
   private boolean brake = false;
+  private boolean gripperPressed = false;
 
   private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1,rightMotor1);
 
@@ -129,6 +130,8 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+    m_shifter.set(false);
+    m_brake.set(false);
   }
 
   /** This function is called periodically during operator control. */
@@ -136,44 +139,63 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     robotDrive.arcadeDrive(-Driver.getLeftY(),-Driver.getRightX());
     
-    if(Driver.getLeftBumperPressed()){
-      shifter = true;
-    } else if(Driver.getRightBumperPressed()){
-      shifter = false;
-    }
-    m_shifter.set(shifter);
+    // if(Driver.getLeftBumperPressed()){
+    //   shifter = true;
+    // } else if(Driver.getRightBumperPressed()){
+    //   shifter = false;
+    // }
+    // m_shifter.set(shifter);
 
-    if(Operator.getYButtonPressed()){
-      intake = true;
-    } else if(Operator.getAButtonPressed()){
-      intake = false;
+    if(Driver.getRightBumperPressed()){
+      m_shifter.toggle();
     }
-    m_intake.set(intake);
 
-    if(Operator.getRightBumperPressed()){
-      brake = true;
-    } else if(Operator.getLeftBumperPressed()){
-      brake = false;
+    // if(Operator.getYButtonPressed()){
+    //   intake = true;
+    // } else if(Operator.getAButtonPressed()){
+    //   intake = false;
+    // }
+    // m_intake.set(intake);
+    if (Operator.getRightBumperPressed()) {
+      m_intake.toggle();
     }
-    m_brake.set(brake);
 
+    // if(Operator.getRightBumperPressed()){
+    //   brake = true;
+    // } else if(Operator.getLeftBumperPressed()){
+    //   brake = false;
+    // }
+    // m_brake.set(brake);
     if(Operator.getBButtonPressed()){
-      gripper = true;
-    } else if(Operator.getXButtonPressed()){
-      gripper = false;
+      m_brake.toggle();
     }
-    m_gripper.set(gripper);
 
-    if (Operator.getPOV() == 90){
-      intakeM1.set(0.75);
-      intakeM2.set(0.75);
-    }else if(Operator.getPOV() == 270){
-      intakeM1.set(-0.75);
-      intakeM2.set(-0.75);
-    }else{
-      intakeM1.set(0);
-      intakeM2.set(0);
+    // if(Operator.getRightPressed()){
+    //   gripper = true;
+    // } else if(Operator.getXButtonPressed()){
+    //   gripper = false;
+    // }
+    // m_gripper.set(gripper);
+
+    if(Operator.getLeftTriggerAxis() <= -0.9 ) {
+      gripperPressed = true;
+    } else if (Operator.getLeftTriggerAxis() >= -0.4) {
+      if(gripperPressed) {
+        m_gripper.toggle();
+        gripperPressed = false;
+      }
     }
+
+    // if (Operator.getPOV() == 90){
+    //   intakeM1.set(0.75);
+    //   intakeM2.set(0.75);
+    // }else if(Operator.getPOV() == 270){
+    //   intakeM1.set(-0.75);
+    //   intakeM2.set(-0.75);
+    // }else{
+    //   intakeM1.set(0);
+    //   intakeM2.set(0);
+    // }
 
     if(Operator.getStartButton()){
       telescopingM1.set(0.75);
