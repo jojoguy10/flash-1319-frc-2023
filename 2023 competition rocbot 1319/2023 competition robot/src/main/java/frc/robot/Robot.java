@@ -6,9 +6,12 @@ package frc.robot;
 
 import java.sql.Driver;
 
+import com.ctre.phoenix.motorcontrol.LimitSwitchNormal;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxLimitSwitch.Type;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -19,6 +22,7 @@ import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.Drivetrain;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -32,10 +36,7 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private SendableChooser<String> m_chooser = new SendableChooser<>();
   //Drive base Motors
-  private CANSparkMax leftMotor1 = new CANSparkMax(1, MotorType.kBrushless);
-  private CANSparkMax leftMotor2 = new CANSparkMax(2, MotorType.kBrushless);
-  private CANSparkMax rightMotor1 = new CANSparkMax(3, MotorType.kBrushless);
-  private CANSparkMax rightMotor2 = new CANSparkMax(4, MotorType.kBrushless);
+
   //Shoulder Motors
   private CANSparkMax shoulderM1 = new CANSparkMax(5, MotorType.kBrushless);
   //private CANSparkMax shoulderM2 = new CANSparkMax(6, MotorType.kBrushless);
@@ -50,18 +51,18 @@ public class Robot extends TimedRobot {
   // Compressor and Pneumatics
   private final Compressor  m_Compressor = new Compressor(10,PneumaticsModuleType.REVPH);
 
-  private Solenoid m_shifter = new Solenoid(PneumaticsModuleType.REVPH, 1);
+  
   private Solenoid m_intake = new Solenoid(PneumaticsModuleType.REVPH, 2);
   private Solenoid m_gripper  = new Solenoid(PneumaticsModuleType.REVPH, 3);
   private Solenoid m_brake = new Solenoid(PneumaticsModuleType.REVPH, 4);
   //private Solenoid m_SPARE = new Solenoid(PneumaticsModuleType.REVPH, 5);
 
-private boolean shifter = false; 
+
 private boolean intake = false;
 private boolean gripper = false;
 private boolean brake = false;
 private double intakeToggle = 0.5;
-  private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1,rightMotor1);
+  private Drivetrain drivetrain = new Drivetrain();
 
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
@@ -73,12 +74,10 @@ private double intakeToggle = 0.5;
   @Override
   public void robotInit() {
 
-    leftMotor1.setInverted(true);
-    leftMotor2.setInverted(true);
     intakeM2.setInverted(true);
 
-    leftMotor2.follow(leftMotor1);
-    rightMotor2.follow(rightMotor1);
+    SparkMaxLimitSwitch limitSwitch = shoulderM1.getReverseLimitSwitch(Type.kNormallyOpen);
+    limitSwitch.enableLimitSwitch(true);
 
     m_Compressor.enableDigital();
   }
@@ -93,6 +92,8 @@ private double intakeToggle = 0.5;
   @Override
   public void robotPeriodic() {
     m_Compressor.enableDigital();
+    SmartDashboard.putNumber("  Shoulder motor 1 encoder.", shoulderM1.getEncoder().getPosition());
+    SmartDashboard.putBoolean("shoulder limet switch", shoulderM1.getReverseLimitSwitch(Type.kNormallyOpen).isPressed());
   }
 
   /**
@@ -134,17 +135,7 @@ private double intakeToggle = 0.5;
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    robotDrive.arcadeDrive(-Driver.getLeftY(),-Driver.getRightX());
-
-//Driver Controls 
-
-    //Left Bumper=Shifter On
-     if(Driver.getLeftBumperPressed()){
-      shifter = true;
-    //Right Bumper=Shifter Off                            
-     }else if(Driver.getRightBumperPressed()){
-      shifter = false;                          
-     }
+    drivetrain.teleopPeriodic(Driver, Operator);
     //Y Button = Intake On
     if(Operator.getYButton()){
       if(intake == true){
@@ -194,9 +185,9 @@ private double intakeToggle = 0.5;
     }
       
     if(Operator.getPOV() == 0){
-      shoulderM1.set(0.75);
+      shoulderM1.set(0.05);
     }else if(Operator.getPOV() == 180){
-      shoulderM1.set(-0.75);
+      shoulderM1.set(-0.05);
     }else{
       shoulderM1.set(0);
     }
