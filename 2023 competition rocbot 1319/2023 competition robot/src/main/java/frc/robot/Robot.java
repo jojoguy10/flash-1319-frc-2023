@@ -22,6 +22,8 @@ import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
 
 /**
@@ -38,15 +40,14 @@ public class Robot extends TimedRobot {
   //Drive base Motors
 
   //Shoulder Motors
-  private CANSparkMax shoulderM1 = new CANSparkMax(5, MotorType.kBrushless);
+  
   //private CANSparkMax shoulderM2 = new CANSparkMax(6, MotorType.kBrushless);
 
 //Intake Motors
   private final CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushed);
   private final CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushed);
 
-  // Telescoping Motor
-  private CANSparkMax telescopingM1 = new CANSparkMax(9, MotorType.kBrushless);
+  
 
   // Compressor and Pneumatics
   private final Compressor  m_Compressor = new Compressor(10,PneumaticsModuleType.REVPH);
@@ -63,7 +64,7 @@ private boolean gripper = false;
 private boolean brake = false;
 private double intakeToggle = 0.5;
   private Drivetrain drivetrain = new Drivetrain();
-
+  private Arm arm = new Arm();
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
 
@@ -76,8 +77,7 @@ private double intakeToggle = 0.5;
 
     intakeM2.setInverted(true);
 
-    SparkMaxLimitSwitch limitSwitch = shoulderM1.getReverseLimitSwitch(Type.kNormallyOpen);
-    limitSwitch.enableLimitSwitch(true);
+
 
     m_Compressor.enableDigital();
   }
@@ -92,8 +92,7 @@ private double intakeToggle = 0.5;
   @Override
   public void robotPeriodic() {
     m_Compressor.enableDigital();
-    SmartDashboard.putNumber("  Shoulder motor 1 encoder.", shoulderM1.getEncoder().getPosition());
-    SmartDashboard.putBoolean("shoulder limet switch", shoulderM1.getReverseLimitSwitch(Type.kNormallyOpen).isPressed());
+    CommandScheduler.getInstance().run();
   }
 
   /**
@@ -136,6 +135,7 @@ private double intakeToggle = 0.5;
   @Override
   public void teleopPeriodic() {
     drivetrain.teleopPeriodic(Driver, Operator);
+    arm.teleopPeriodic(Driver, Operator);
     //Y Button = Intake On
     if(Operator.getYButton()){
       if(intake == true){
@@ -174,23 +174,7 @@ private double intakeToggle = 0.5;
       intakeM1.set(intakeToggle);
       intakeM2.set(intakeToggle);
       }
-    //Start Button
-     if(Operator.getStartButton()){
-      telescopingM1.set(0.75);
-    //Back Button
-     }else if(Operator.getBackButton()){
-      telescopingM1.set(-0.75);
-    }else{
-      telescopingM1.set(0);
-    }
-      
-    if(Operator.getPOV() == 0){
-      shoulderM1.set(0.05);
-    }else if(Operator.getPOV() == 180){
-      shoulderM1.set(-0.05);
-    }else{
-      shoulderM1.set(0);
-    }
+
   }
 
   /** This function is called once when the robot is disabled. */
