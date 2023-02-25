@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
 
@@ -67,7 +68,7 @@ private double intakeToggle = 0.5;
   private Arm arm = new Arm();
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
-
+  private final CommandXboxController OperatorCommand = new CommandXboxController(1);
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -80,6 +81,9 @@ private double intakeToggle = 0.5;
 
 
     m_Compressor.enableDigital();
+    OperatorCommand.povDown().onTrue(arm.createDriveArmCommand(0, 0));
+    OperatorCommand.povUp().onTrue(arm.createDriveArmCommand(125, 120));
+    OperatorCommand.povRight().onTrue(arm.createDriveArmCommand(110, 23));
   }
 
   /**
