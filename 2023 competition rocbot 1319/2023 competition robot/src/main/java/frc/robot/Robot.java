@@ -41,14 +41,14 @@ public class Robot extends TimedRobot {
 //private final CANSparkMax shoulderM2 = new CANSparkMax(6, MotorType.kBrushless);
 
 //Intake Motors
-  private final CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushless);
-  private final CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushless);
+  private final CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushed);
+  private final CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushed);
 
 // Telescoping Motor
   private final CANSparkMax telescopingM1 = new CANSparkMax(9, MotorType.kBrushless);
 
   // Compressor and Pneumatics
-  private final Compressor  m_Compressor = new Compressor(0,PneumaticsModuleType.CTREPCM);
+  private final Compressor  m_Compressor = new Compressor(10,PneumaticsModuleType.REVPH);
 
 private final Solenoid m_shifter = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 private final Solenoid m_intake = new Solenoid(PneumaticsModuleType.CTREPCM, 2);
@@ -59,7 +59,7 @@ private boolean shifter = false;
 private boolean intake = false;
 private boolean gripper = false;
 private boolean brake = false;
-
+private double intakeToggle = 0.5;
   private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1,rightMotor1);
 
   private final XboxController Driver = new XboxController(0);
@@ -78,7 +78,7 @@ private boolean brake = false;
     leftMotor2.follow(leftMotor1);
     rightMotor2.follow(rightMotor1);
 
-
+    m_Compressor.enableDigital();
   }
 
   /**
@@ -132,44 +132,57 @@ private boolean brake = false;
   @Override
   public void teleopPeriodic() {
     robotDrive.arcadeDrive(-Driver.getLeftY(),-Driver.getRightX());
-    
+
+//Driver Controls 
+
+    //Left Bumper=Shifter On
      if(Driver.getLeftBumperPressed()){
       shifter = true;
+    //Right Bumper=Shifter Off                            
      }else if(Driver.getRightBumperPressed()){
-      shifter = false;
+      shifter = false;                          
      }
+    //Y Button = Intake On
+    if(Operator.getYButton()){
+      if(intake == true){
+        intake = false;
+       }else{
+        intake = true;
+       }
+       m_intake.set(intake);
+    }
 
-     if(Operator.getYButtonPressed()){
-      intake = true;
-     }else if(Operator.getAButtonPressed()){
-      intake = false;
-     }
+    //Operator Controls
 
+    
+    //Right Bumper=Brake On 
      if(Operator.getRightBumperPressed()){
       brake = true;
+    //Left Bumper=Brake Off
      }else if(Operator.getLeftBumperPressed()){
       brake = false;
       }
-
+    //B Button = Gripper On
       if(Operator.getBButtonPressed()){
       gripper = true;
+    //X Button = Gripper Off
       }else if(Operator.getXButtonPressed()){
       gripper = false;
       }
-
-      if (Operator.getPOV() == 90){
-      intakeM1.set(0.75);
-      intakeM2.set(0.75);
-     }else if(Operator.getPOV() == 270){
-      intakeM1.set(-0.75);
-      intakeM2.set(-0.75);
-     }else{
-      intakeM1.set(0);
-      intakeM2.set(0);
+    //Right Button On D-Pad = 90 Degrees 
+      if (Operator.getAButton()){
+      if(intakeToggle == 0.5 ){
+        intakeToggle = 0;
+      }else{
+        intakeToggle = 0.5;
       }
-
+      intakeM1.set(intakeToggle);
+      intakeM2.set(intakeToggle);
+      }
+    //Start Button
      if(Operator.getStartButton()){
       telescopingM1.set(0.75);
+    //Back Button
      }else if(Operator.getBackButton()){
       telescopingM1.set(-0.75);
       }else{
