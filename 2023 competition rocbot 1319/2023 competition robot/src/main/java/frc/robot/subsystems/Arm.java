@@ -115,10 +115,10 @@ public class Arm extends SubsystemBase {
 
     public void teleopPeriodic(XboxController Driver, XboxController Operator) {
         // Start Button
-        if (Operator.getStartButton()) {
+        if (Operator.getYButton()) {
             setTelescopePos(80);
             // Back Button
-        } else if (Operator.getBackButton()) {
+        } else if (Operator.getAButton()) {
             setTelescopePos(0);
         } else {
             //telescopingM1.set(0);
