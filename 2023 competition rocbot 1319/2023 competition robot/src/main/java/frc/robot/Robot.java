@@ -169,7 +169,7 @@ private double intakeToggle = 0.5;
       gripper = false;
       }
     //Right Button On D-Pad = 90 Degrees 
-      if (Operator.getAButton()){
+      if (Operator.getRightBumperPressed()){
       if(intakeToggle == 0.5 ){
         intakeToggle = 0;
       }else{
