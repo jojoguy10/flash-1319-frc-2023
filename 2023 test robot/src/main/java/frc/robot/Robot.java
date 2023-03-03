@@ -7,13 +7,16 @@ package frc.robot;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.sensors.PigeonIMU;
+import com.revrobotics.ColorSensorV3;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
@@ -59,6 +62,8 @@ public class Robot extends TimedRobot {
   private double autoSpeed = 0.25;
 
   private final DigitalInput bottomlimitSwitch = new DigitalInput(4);
+  private Port i2cPort;
+  private ColorSensorV3 m_colorSensor;
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -82,12 +87,16 @@ public class Robot extends TimedRobot {
     m_robotDrive = new DifferentialDrive(m_leftMotor1, m_rightMotor1);
 
     m_Compressor.enableDigital();
+    
+    final ColorSensorV3 m_colorSensor = new ColorSensorV3(i2cPort);
 
     m_leftMotor1.setSelectedSensorPosition(0,0,0);
     m_leftMotor2.setSelectedSensorPosition(0,0,0);
     m_rightMotor1.setSelectedSensorPosition(0,0,0);
     m_rightMotor2.setSelectedSensorPosition(0,0,0);
     startPitch = imu.getPitch();
+    final I2C.Port i2cPort = I2C.Port.kOnboard;
+
   }
 
   /**
@@ -99,6 +108,16 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
+    Color detectedColor = m_colorSensor.getColor();
+    double IR = m_colorSensor.getIR();
+    int proximity = m_colorSensor.getProximity();
+    SmartDashboard.putNumber("Proximity", proximity);
+
+    
+    SmartDashboard.putNumber("Red", detectedColor.red);
+    SmartDashboard.putNumber("Green", detectedColor.green);
+    SmartDashboard.putNumber("Blue", detectedColor.blue);
+    SmartDashboard.putNumber("IR", IR);
     SmartDashboard.putNumber("Joystick x Left value.", m_Joystick.getLeftX());
     SmartDashboard.putNumber("Joystick x Right value.", m_Joystick.getRightX());
     SmartDashboard.putNumber("Joystick y Right value.", m_Joystick.getRightY());
