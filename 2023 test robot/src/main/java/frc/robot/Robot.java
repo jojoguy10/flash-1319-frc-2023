@@ -16,9 +16,9 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.commands.CommandBalance;
 import frc.robot.commands.CommandBalance2;
 
 /**
@@ -113,6 +113,8 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumberArray("Gyro Data", ypr);
 
     CommandScheduler.getInstance().run();
+
+    
   }
 
   /**

@@ -19,8 +19,11 @@ public class Drivetrain extends SubsystemBase {
 
     private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1, rightMotor1);
 
+    private boolean brake = false;
     private boolean shifter = false;
     private Solenoid m_shifter = new Solenoid(PneumaticsModuleType.REVPH, 1);
+    private Solenoid m_brake = new Solenoid(PneumaticsModuleType.REVPH, 4);
+
 
     public Drivetrain() {
         leftMotor1.setInverted(true);
@@ -55,12 +58,22 @@ public class Drivetrain extends SubsystemBase {
         // Driver Controls
 
         // Left Bumper=Shifter On
-        if (Driver.getLeftBumperPressed()) {
+        if (Driver.getLeftTriggerAxis() >= 0.9) {
             shifter = true;
             // Right Bumper=Shifter Off
-        } else if (Driver.getRightBumperPressed()) {
+        } else if (Driver.getRightTriggerAxis() >= 0.9) {
             shifter = false;
         }
         m_shifter.set(shifter);
+
+         
+     if(Driver.getBButtonPressed()){
+        if(brake == true){
+            brake = false;
+        }else{
+            brake = true;
+        }
+      }
+      m_brake.set(brake);
     }
 }

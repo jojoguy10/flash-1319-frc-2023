@@ -56,13 +56,11 @@ public class Robot extends TimedRobot {
   
   private Solenoid m_intake = new Solenoid(PneumaticsModuleType.REVPH, 2);
   private Solenoid m_gripper  = new Solenoid(PneumaticsModuleType.REVPH, 3);
-  private Solenoid m_brake = new Solenoid(PneumaticsModuleType.REVPH, 4);
   //private Solenoid m_SPARE = new Solenoid(PneumaticsModuleType.REVPH, 5);
 
 
 private boolean intake = false;
 private boolean gripper = false;
-private boolean brake = false;
 private double intakeToggle = 0.5;
   private Drivetrain drivetrain = new Drivetrain();
   private Arm arm = new Arm();
@@ -140,8 +138,8 @@ private double intakeToggle = 0.5;
   public void teleopPeriodic() {
     drivetrain.teleopPeriodic(Driver, Operator);
     arm.teleopPeriodic(Driver, Operator);
-    //Y Button = Intake On
-    if(Operator.getYButton()){
+
+    if(Operator.getRightBumperPressed()){
       if(intake == true){
         intake = false;
        }else{
@@ -152,33 +150,26 @@ private double intakeToggle = 0.5;
 
     //Operator Controls
 
-    
-    //Right Bumper=Brake On 
-     if(Operator.getRightBumperPressed()){
-      brake = true;
-    //Left Bumper=Brake Off
-     }else if(Operator.getLeftBumperPressed()){
-      brake = false;
-    }
-    m_brake.set(brake);
-
-    if(Operator.getBButtonPressed()){
-      gripper = true;
-    //X Button = Gripper Off
-      }else if(Operator.getXButtonPressed()){
-      gripper = false;
-      }
-    //Right Button On D-Pad = 90 Degrees 
-      if (Operator.getRightBumperPressed()){
-      if(intakeToggle == 0.5 ){
-        intakeToggle = 0;
+    if(Operator.getRightTriggerAxis() >= 0.9){
+      if(gripper == true){
+        gripper = false;
       }else{
-        intakeToggle = 0.5;
+        gripper = false;
       }
-      intakeM1.set(intakeToggle);
-      intakeM2.set(intakeToggle);
+      m_gripper.set(gripper);
       }
 
+        if (Operator.getLeftTriggerAxis() >= 0.9){
+          intakeM1.set(1);
+          intakeM2.set(1);
+          }else if (Operator.getLeftBumper()){
+           intakeM1.set(-1);
+            intakeM2.set(-1);
+          }else{
+             intakeM1.set(0);
+             intakeM2.set(0);
+        }
+      }
   }
 
   /** This function is called once when the robot is disabled. */
