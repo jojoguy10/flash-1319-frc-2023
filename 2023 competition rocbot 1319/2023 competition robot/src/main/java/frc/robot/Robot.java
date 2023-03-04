@@ -113,7 +113,7 @@ public class Robot extends TimedRobot {
     System.out.println("Auto selected: " + m_autoSelected);
   }
 
-  /** This function is called periodically during autonomous. */
+  /** This function is called periodically during a/utonomous. */
   @Override
   public void autonomousPeriodic() {
     switch (m_autoSelected) {
@@ -184,6 +184,7 @@ public class Robot extends TimedRobot {
         m_gripper.toggle();
         gripperPressed = false;
       }
+<<<<<<< Updated upstream
     }
 
     // if (Operator.getPOV() == 90){
@@ -213,6 +214,10 @@ public class Robot extends TimedRobot {
       shoulderM1.set(0);
     }
   }
+=======
+  
+
+>>>>>>> Stashed changes
 
   /** This function is called once when the robot is disabled. */
   @Override
