@@ -2,13 +2,14 @@ package frc.robot.commands.arm;
 
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Arm.TelePreset;
 
 public class ExtendArmToPos extends CommandBase {
     Arm arm;
     double pos;
-    public ExtendArmToPos(Arm arm, double pos) {
+    public ExtendArmToPos(Arm arm, TelePreset pos) {
         this.arm = arm;
-        this.pos = pos;
+        this.pos = pos.telePos;
     }
 
     @Override

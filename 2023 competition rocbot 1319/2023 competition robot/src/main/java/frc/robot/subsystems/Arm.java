@@ -1,9 +1,12 @@
 package frc.robot.subsystems;
 
+import java.lang.annotation.RetentionPolicy;
+
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxLimitSwitch.Type;
 
@@ -24,14 +27,30 @@ public class Arm extends SubsystemBase {
     SparkMaxLimitSwitch topLimitShoulder;
     SparkMaxLimitSwitch bottomLimitTelescoping;
     SparkMaxLimitSwitch topLimitTelescoping;
+    double armTarget = 0;
+    double teleTarget = 0;
 
     boolean extended = false;
 
     // Angle of arm position before the arm must be fully retracted in order to go down further
-    double extendLimitThreshold = 80;
-    double teleRetractedThresh = 4;
-    double teleMidPos = 23;
-    double teleHighPos = 120;
+    public static final double extendLimitThreshold = 80;
+    public static final double teleRetractedThresh = 4;
+    public static final double teleMidPos = 23;
+    public static final double teleHighPos = 120;
+    public static final double armHighPos = 125;
+    public static final double armMidPos = 110;
+
+    public static enum TelePreset {
+        RETRACTED(0),
+        MID(teleMidPos),
+        HIGH(teleHighPos);
+        public final double telePos;
+
+        private TelePreset(double x) {
+            this.telePos = x;
+        }
+    }
+    TelePreset curTele;
     public Arm() {
         bottomLimitShoulder = shoulderM1.getReverseLimitSwitch(Type.kNormallyOpen);
         bottomLimitShoulder.enableLimitSwitch(true);
@@ -42,6 +61,7 @@ public class Arm extends SubsystemBase {
         bottomLimitTelescoping.enableLimitSwitch(true);
         topLimitTelescoping = telescopingM1.getForwardLimitSwitch(Type.kNormallyOpen);
         topLimitTelescoping.enableLimitSwitch(true);
+        telescopingM1.setSoftLimit(SoftLimitDirection.kForward, 120);
 
         // Setup the PID for the shoulder motor
         double shoulderP = 0.01;
@@ -82,17 +102,25 @@ public class Arm extends SubsystemBase {
         }
         
         SmartDashboard.putNumber("Tele motor 1 encoder.", telescopingM1.getEncoder().getPosition());
-        SmartDashboard.putNumber("  Shoulder motor 1 encoder.", shoulderM1.getEncoder().getPosition());
+        SmartDashboard.putNumber("Shoulder motor 1 encoder.", shoulderM1.getEncoder().getPosition());
         SmartDashboard.putBoolean("shoulder limit switch",
                 shoulderM1.getReverseLimitSwitch(Type.kNormallyOpen).isPressed());
+        SmartDashboard.putNumber("Shoulder Target", armTarget);
+        SmartDashboard.putNumber("Tele Target", teleTarget);
+    }
+
+    public TelePreset getTelePreset() {
+        return curTele;
     }
 
     public void setShoulderAngle(double angle) {
         shoulderM1.getPIDController().setReference(angle, ControlType.kPosition);
+        armTarget = angle;
     }
 
     public void setTelescopePos(double pos) {
         telescopingM1.getPIDController().setReference(pos, ControlType.kPosition);
+        teleTarget = pos;
     }
 
     public boolean getRetractedLimitSwitch() {
@@ -102,6 +130,14 @@ public class Arm extends SubsystemBase {
     // Encoder position of the arm
     public double getArmAngle() {
         return shoulderM1.getEncoder().getPosition();
+    }
+
+    public double getArmTarget() {
+        return armTarget;
+    }
+
+    public double getTeleTarget() {
+        return teleTarget;
     }
 
     // Encoder position of the telescoping arm
@@ -116,30 +152,36 @@ public class Arm extends SubsystemBase {
     public void teleopPeriodic(XboxController Driver, XboxController Operator) {
         // Start Button
         if (Operator.getYButton()) {
-            setTelescopePos(80);
+            setTelescopePos(96);
             // Back Button
         } else if (Operator.getAButton()) {
             setTelescopePos(0);
         } else {
             //telescopingM1.set(0);
         }
-        
-        /*if (Operator.getPOV() == 0) {
-            setShoulderAngle(121);
-        } else if (Operator.getPOV() == 180) {
-            setShoulderAngle(0);
+        if(getArmAngle() < extendLimitThreshold) {
+            curTele = TelePreset.RETRACTED;
+        } else if(getArmAngle() < armHighPos - 7.5) {
+            curTele = TelePreset.MID;
         } else {
-            //shoulderM1.set(0);
-        }*/
+            curTele = TelePreset.HIGH;
+        }
+        if(isExtended()) {
+            setTelescopePos(curTele.telePos);
+        }
     }
 
-    public Command createDriveArmCommand(double pos, double extendPos) {
+    public Command createDriveArmCommand(double pos, TelePreset extendPos) {
         return 
              // Retract the arm unless it is above the point where it does not need to be retracted
-            (new FullRetractArm(this)).unless(() -> this.extendLimitThreshold < extendPos)
+            (new FullRetractArm(this)).unless(() -> this.extendLimitThreshold < pos)
             // Then, drive the shoulder to the specified position
             .andThen(new ShoulderDriveToPosition(this, pos))
             // Finally, extend the arm to the new position unless the arm is retracted
             .andThen(new ExtendArmToPos(this, extendPos).unless(() -> !isExtended()));
-    }   
+    }
+
+    public Command createToggleArm() {
+        return new ExtendArmToPos(null, curTele)
+    }
 }
