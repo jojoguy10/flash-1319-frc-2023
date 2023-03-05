@@ -12,11 +12,15 @@ import com.revrobotics.SparkMaxLimitSwitch.Type;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.commands.arm.CloseGripper;
 import frc.robot.commands.arm.ExtendArmToPos;
 import frc.robot.commands.arm.FullRetractArm;
+import frc.robot.commands.arm.LowerIntake;
 import frc.robot.commands.arm.ShoulderDriveToPosition;
 
 public class Arm extends SubsystemBase {
@@ -76,12 +80,12 @@ public class Arm extends SubsystemBase {
 
         // Setup the PID for the telescoping motor
         double teleP = 0.01;
-        double teleI = 0.0000;
+        double teleI = 0.00001;
         double teleD = 0.00;
         SparkMaxPIDController pidTele = telescopingM1.getPIDController();
         pidTele.setP(teleP);
         pidTele.setI(teleI);
-        pidTele.setIMaxAccum(0.5, 0);
+        pidTele.setIMaxAccum(0.2, 0);
         pidTele.setD(teleD);
         pidTele.setOutputRange(-1.0, 1.0);
 
@@ -101,6 +105,17 @@ public class Arm extends SubsystemBase {
             telescopingM1.getEncoder().setPosition(0);
         }
         
+        if(getArmAngle() < extendLimitThreshold) {
+            curTele = TelePreset.RETRACTED;
+        } else if(getArmAngle() < armHighPos - 7.5) {
+            curTele = TelePreset.MID;
+        } else {
+            curTele = TelePreset.HIGH;
+        }
+
+        SmartDashboard.putNumber("Shoulder Current", shoulderM1.getOutputCurrent());
+        SmartDashboard.putNumber("Telescoping Current", telescopingM1.getOutputCurrent());
+
         SmartDashboard.putNumber("Tele motor 1 encoder.", telescopingM1.getEncoder().getPosition());
         SmartDashboard.putNumber("Shoulder motor 1 encoder.", shoulderM1.getEncoder().getPosition());
         SmartDashboard.putBoolean("shoulder limit switch",
@@ -151,37 +166,38 @@ public class Arm extends SubsystemBase {
 
     public void teleopPeriodic(XboxController Driver, XboxController Operator) {
         // Start Button
-        if (Operator.getYButton()) {
-            setTelescopePos(96);
+        if (Operator.getBButton() && getArmAngle() > extendLimitThreshold) {
+            setTelescopePos(curTele.telePos);
             // Back Button
-        } else if (Operator.getAButton()) {
+        } else if (Operator.getXButton()) {
             setTelescopePos(0);
         } else {
             //telescopingM1.set(0);
         }
-        if(getArmAngle() < extendLimitThreshold) {
-            curTele = TelePreset.RETRACTED;
-        } else if(getArmAngle() < armHighPos - 7.5) {
-            curTele = TelePreset.MID;
-        } else {
-            curTele = TelePreset.HIGH;
-        }
-        if(isExtended()) {
-            setTelescopePos(curTele.telePos);
-        }
     }
 
-    public Command createDriveArmCommand(double pos, TelePreset extendPos) {
+    public Command createDriveArmCommand(IntakeSubsystem intake, double pos, TelePreset extendPos) {
         return 
+            (new LowerIntake(intake))
+            //.andThen(new CloseGripper(intake))
+            .andThen(new WaitCommand(2.0))
              // Retract the arm unless it is above the point where it does not need to be retracted
-            (new FullRetractArm(this)).unless(() -> this.extendLimitThreshold < pos)
+            //((new CloseGripper(intake)).andThen(new LowerIntake(intake)).andThen(new FullRetractArm(this))).unless(() -> this.extendLimitThreshold < pos)
             // Then, drive the shoulder to the specified position
-            .andThen(new ShoulderDriveToPosition(this, pos))
+            .andThen(new ShoulderDriveToPosition(this, pos));
             // Finally, extend the arm to the new position unless the arm is retracted
-            .andThen(new ExtendArmToPos(this, extendPos).unless(() -> !isExtended()));
+            //.andThen(new ExtendArmToPos(this, extendPos).unless(() -> !isExtended()));
     }
 
-    public Command createToggleArm() {
-        return new ExtendArmToPos(null, curTele)
+    public Command fullLowerCommands(IntakeSubsystem intake) {
+        return (new CloseGripper(intake))
+            .andThen(new LowerIntake(intake))
+            .andThen(new FullRetractArm(this))
+            .andThen(new WaitCommand(2.0))
+            .andThen(new ShoulderDriveToPosition(this, 0));
+    }
+
+    public Command createExtendArm() {
+        return (new ExtendArmToPos(this, curTele)).unless(() -> getArmAngle() < this.extendLimitThreshold && curTele != TelePreset.RETRACTED);
     }
 }
