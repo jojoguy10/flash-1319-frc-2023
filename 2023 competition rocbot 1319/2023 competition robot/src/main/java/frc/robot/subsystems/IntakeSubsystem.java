@@ -27,6 +27,14 @@ public class IntakeSubsystem extends SubsystemBase {
         m_gripper.toggle();
     }
 
+    public void closeGripper() {
+        m_gripper.set(false);
+    }
+
+    public void lowerIntake() {
+        m_intake.set(true);
+    }
+
     public void runIntakeForwards() {
         intakeM1.set(1);
         intakeM2.set(1);

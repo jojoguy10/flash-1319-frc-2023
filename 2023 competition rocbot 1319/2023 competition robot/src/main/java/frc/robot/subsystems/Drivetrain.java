@@ -5,6 +5,7 @@ import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.XboxController;
@@ -18,11 +19,12 @@ public class Drivetrain extends SubsystemBase {
     private CANSparkMax rightMotor2 = new CANSparkMax(4, MotorType.kBrushless);
 
     private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1, rightMotor1);
+    private SlewRateLimiter xLimiter = new SlewRateLimiter(1.0), zLimiter = new SlewRateLimiter(1.0);
 
     private boolean brake = false;
     private boolean shifter = false;
-    private Solenoid m_shifter = new Solenoid(PneumaticsModuleType.REVPH, 1);
-    private Solenoid m_brake = new Solenoid(PneumaticsModuleType.REVPH, 4);
+    private Solenoid m_shifter = new Solenoid(10, PneumaticsModuleType.REVPH, 1);
+    private Solenoid m_brake = new Solenoid(10, PneumaticsModuleType.REVPH, 4);
 
 
     public Drivetrain() {
@@ -53,7 +55,9 @@ public class Drivetrain extends SubsystemBase {
     }
 
     public void teleopPeriodic(XboxController Driver, XboxController Operator) {
-        robotDrive.arcadeDrive(-Driver.getLeftY(), -Driver.getRightX());
+        double x = xLimiter.calculate(-Driver.getLeftY());
+        double z = zLimiter.calculate(-Driver.getRightX());
+        robotDrive.arcadeDrive(x, z);
 
         // Driver Controls
 

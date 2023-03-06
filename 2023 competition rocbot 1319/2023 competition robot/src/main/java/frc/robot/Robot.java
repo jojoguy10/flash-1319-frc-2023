@@ -13,6 +13,8 @@ import com.revrobotics.SparkMaxLimitSwitch;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxLimitSwitch.Type;
 
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.cscore.CameraServerJNI;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -31,6 +33,7 @@ import frc.robot.commands.arm.ToggleIntake;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.Arm.TelePreset;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -68,7 +71,6 @@ public class Robot extends TimedRobot {
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
   private final CommandXboxController OperatorCommand = new CommandXboxController(1);
-
   /**
    * This function is run when the robot is first started up and should be used
    * for any
@@ -78,13 +80,14 @@ public class Robot extends TimedRobot {
   public void robotInit() {
 
     m_Compressor.enableDigital();
-    OperatorCommand.povDown().onTrue(arm.createDriveArmCommand(0, 0));
-    OperatorCommand.povUp().onTrue(arm.createDriveArmCommand(Arm.armHighPos, 96));
-    OperatorCommand.povRight().onTrue(arm.createDriveArmCommand(Arm.armMidPos, 23));
+    OperatorCommand.povDown().onTrue(arm.fullLowerCommands(intake));
+    OperatorCommand.povUp().onTrue(arm.createDriveArmCommand(intake, Arm.armHighPos, TelePreset.HIGH));
+    OperatorCommand.povRight().onTrue(arm.createDriveArmCommand(intake, Arm.armMidPos, TelePreset.MID));
     OperatorCommand.rightTrigger(0.75).onTrue(new ToggleGripper(intake));
     OperatorCommand.rightBumper().onTrue(new ToggleIntake(intake));
     intake.setDefaultCommand(new RunIntake(intake, Operator));
     arm.setDefaultCommand(new RunArm(arm, Operator));
+    CameraServer.startAutomaticCapture();
   }
 
   /**

@@ -166,13 +166,20 @@ public class Arm extends SubsystemBase {
 
     public void teleopPeriodic(XboxController Driver, XboxController Operator) {
         // Start Button
-        if (Operator.getBButton() && getArmAngle() > extendLimitThreshold) {
+        if (Operator.getYButton() && getArmAngle() > extendLimitThreshold) {
             setTelescopePos(curTele.telePos);
             // Back Button
-        } else if (Operator.getXButton()) {
+        } else if (Operator.getAButton()) {
             setTelescopePos(0);
         } else {
             //telescopingM1.set(0);
+        }
+        if(getArmAngle()<extendLimitThreshold){
+            curTele = TelePreset.RETRACTED;
+        }else if(getArmAngle()< armHighPos -7.5){
+            curTele = TelePreset.MID; 
+        }else{
+            curTele = TelePreset.HIGH;
         }
     }
 
