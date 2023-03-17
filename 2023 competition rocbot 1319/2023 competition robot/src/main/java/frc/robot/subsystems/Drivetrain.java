@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.sensors.PigeonIMU;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -10,7 +11,12 @@ import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.commands.DriveDistance;
+import frc.robot.commands.arm.BalanceCommand;
+import frc.robot.commands.arm.DriveBackwards;
 
 public class Drivetrain extends SubsystemBase {
     private CANSparkMax leftMotor1 = new CANSparkMax(1, MotorType.kBrushless);
@@ -26,6 +32,8 @@ public class Drivetrain extends SubsystemBase {
     private Solenoid m_shifter = new Solenoid(10, PneumaticsModuleType.REVPH, 1);
     private Solenoid m_brake = new Solenoid(10, PneumaticsModuleType.REVPH, 4);
 
+    public PigeonIMU imu;
+    public double startPitch;
 
     public Drivetrain() {
         leftMotor1.setInverted(true);
@@ -47,11 +55,27 @@ public class Drivetrain extends SubsystemBase {
         pidR1.setP(p);
         pidR1.setI(i);
         pidR1.setD(d);
+
+        imu = new PigeonIMU(25);
+        leftMotor1.getEncoder().setPosition(0);
     }
 
     public void driveToPosition(double pos) {
         leftMotor1.getPIDController().setReference(pos, CANSparkMax.ControlType.kPosition);
         rightMotor1.getPIDController().setReference(pos, CANSparkMax.ControlType.kPosition);
+    }
+
+    public void arcadeDrive(double x, double r, boolean b) {
+        robotDrive.arcadeDrive(x, r, b);
+    }
+
+    public double getDistance() {
+        double ratio = 3.14192 * 2 * 3 * 2.54 / 17.78;
+        return leftMotor1.getEncoder().getPosition() * ratio;
+    }
+
+    public void resetEncoder() {
+        leftMotor1.getEncoder().setPosition(0.0);
     }
 
     public void teleopPeriodic(XboxController Driver, XboxController Operator) {
@@ -79,5 +103,16 @@ public class Drivetrain extends SubsystemBase {
         }
       }
       m_brake.set(brake);
+    }
+
+    @Override
+    public void periodic() {
+        SmartDashboard.putNumber("Base Encoder", leftMotor1.getEncoder().getPosition());
+        SmartDashboard.putNumber("Base Distance", getDistance());
+        SmartDashboard.putNumber("Corrected pitch", imu.getRoll() - startPitch);
+    }
+
+    public Command balanceAuto() {
+        return new DriveBackwards(this, 200).andThen(new BalanceCommand(this));
     }
 }

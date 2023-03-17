@@ -29,16 +29,27 @@ public class RunArm extends CommandBase {
     double shoulderSensitivity = 0.4;
     if(Math.abs(controller.getLeftY()) > 0.2) {
       double newTarget = arm.getArmTarget() - controller.getLeftY()*shoulderSensitivity;
+      if(newTarget < 0) {
+        newTarget = 0;
+      } else if(newTarget > 160) {
+        newTarget = 160;
+      }
       // Is the arm retracted or is the arm above the intake
       if(!arm.isExtended() || arm.getArmTarget() > arm.extendLimitThreshold) {
         arm.setShoulderAngle(newTarget);
       }
 
     }
-    double teleSensitivity = 0.4;
+    double teleSensitivity = 0.8;
     if(Math.abs(controller.getRightY()) > 0.2) {
       if(arm.getArmTarget() > arm.extendLimitThreshold) {
-        arm.setTelescopePos(arm.getTeleTarget() - controller.getRightY()*teleSensitivity);
+        double newTarget = arm.getTeleTarget() - controller.getRightY()*teleSensitivity;
+        if(newTarget < 0) {
+          newTarget = 0;
+        } else if(newTarget > 120) {
+          newTarget = 120;
+        }
+        arm.setTelescopePos(newTarget);
       }
     }
   }

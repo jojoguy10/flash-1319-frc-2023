@@ -15,6 +15,8 @@ import com.revrobotics.SparkMaxLimitSwitch.Type;
 
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.CameraServerJNI;
+import edu.wpi.first.cscore.UsbCamera;
+import edu.wpi.first.cscore.VideoSource.ConnectionStrategy;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -25,7 +27,9 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.commands.DriveDistance;
 import frc.robot.commands.arm.RunArm;
 import frc.robot.commands.arm.RunIntake;
 import frc.robot.commands.arm.ToggleGripper;
@@ -45,8 +49,8 @@ import frc.robot.subsystems.Arm.TelePreset;
  * project.
  */
 public class Robot extends TimedRobot {
-  private final static String kDefaultAuto = "Default";
-  private final static String kCustomAuto = "My Auto";
+  private final static String kDefaultAuto = "Drive Forward";
+  private final static String kCustomAuto = "Balance Auto";
   private String m_autoSelected;
   private SendableChooser<String> m_chooser = new SendableChooser<>();
   // Drive base Motors
@@ -63,14 +67,15 @@ public class Robot extends TimedRobot {
 
   // private Solenoid m_SPARE = new Solenoid(PneumaticsModuleType.REVPH, 5);
 
-  private boolean gripper = false;
-  private double intakeToggle = 0.5;
+  private boolean useCameraA = false;
   private Drivetrain drivetrain = new Drivetrain();
   private Arm arm = new Arm();
   private IntakeSubsystem intake = new IntakeSubsystem();
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
   private final CommandXboxController OperatorCommand = new CommandXboxController(1);
+  //private final UsbCamera cameraA = CameraServer.startAutomaticCapture(0);
+  //private final UsbCamera cameraB = CameraServer.startAutomaticCapture(1);
   /**
    * This function is run when the robot is first started up and should be used
    * for any
@@ -85,9 +90,26 @@ public class Robot extends TimedRobot {
     OperatorCommand.povRight().onTrue(arm.createDriveArmCommand(intake, Arm.armMidPos, TelePreset.MID));
     OperatorCommand.rightTrigger(0.75).onTrue(new ToggleGripper(intake));
     OperatorCommand.rightBumper().onTrue(new ToggleIntake(intake));
+    /*OperatorCommand.start().onTrue(new InstantCommand(() -> {
+      if(useCameraA) {
+        CameraServer.getServer().setSource(cameraA);
+      } else {
+        CameraServer.getServer().setSource(cameraB);
+      }
+      useCameraA = !useCameraA;
+    })); */
     intake.setDefaultCommand(new RunIntake(intake, Operator));
     arm.setDefaultCommand(new RunArm(arm, Operator));
-    CameraServer.startAutomaticCapture();
+    UsbCamera camera = CameraServer.startAutomaticCapture();
+    //cameraA.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
+    //cameraB.setConnectionStrategy(ConnectionStrategy.kKeepOpen);
+    //CameraServer.getServer().setSource(cameraA);
+
+    m_chooser.addOption(kCustomAuto, kCustomAuto);
+    m_chooser.setDefaultOption(kDefaultAuto, kDefaultAuto);
+    SmartDashboard.putData(m_chooser);
+
+    drivetrain.startPitch = drivetrain.imu.getRoll();
   }
 
   /**
@@ -126,22 +148,27 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_autoSelected = m_chooser.getSelected();
+    
+    //drivetrain.balanceAuto().schedule();
     // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
+    switch (m_autoSelected) {
+      case kCustomAuto:
+        // Put custom auto code here
+        (drivetrain.balanceAuto()).schedule();
+        break;
+      case kDefaultAuto:
+      default:
+      (new DriveDistance(drivetrain, 350)).schedule();
+        // Put default auto code here
+        break;
+    }
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
-    switch (m_autoSelected) {
-      case kCustomAuto:
-        // Put custom auto code here
-        break;
-      case kDefaultAuto:
-      default:
-        // Put default auto code here
-        break;
-    }
+
   }
 
   /** This function is called once when teleop is enabled. */

@@ -66,20 +66,21 @@ public class Arm extends SubsystemBase {
         topLimitTelescoping = telescopingM1.getForwardLimitSwitch(Type.kNormallyOpen);
         topLimitTelescoping.enableLimitSwitch(true);
         telescopingM1.setSoftLimit(SoftLimitDirection.kForward, 120);
+        telescopingM1.getEncoder().setPosition(0);
 
         // Setup the PID for the shoulder motor
-        double shoulderP = 0.01;
-        double shoulderI = 0.000025;
+        double shoulderP = 0.02;
+        double shoulderI = 0.00005;
         double shoulderD = 0.01;
         SparkMaxPIDController pidShoulder = shoulderM1.getPIDController();
         pidShoulder.setP(shoulderP);
         pidShoulder.setI(shoulderI);
-        pidShoulder.setIMaxAccum(0.5, 0);
+        pidShoulder.setIMaxAccum(0.75, 0);
         pidShoulder.setD(shoulderD);
         pidShoulder.setOutputRange(-1.0, 1.0);
 
         // Setup the PID for the telescoping motor
-        double teleP = 0.01;
+        double teleP = 0.02;
         double teleI = 0.00001;
         double teleD = 0.00;
         SparkMaxPIDController pidTele = telescopingM1.getPIDController();
@@ -186,8 +187,8 @@ public class Arm extends SubsystemBase {
     public Command createDriveArmCommand(IntakeSubsystem intake, double pos, TelePreset extendPos) {
         return 
             (new LowerIntake(intake))
-            //.andThen(new CloseGripper(intake))
-            .andThen(new WaitCommand(2.0))
+            .andThen(new CloseGripper(intake))
+            .andThen(new WaitCommand(0.75))
              // Retract the arm unless it is above the point where it does not need to be retracted
             //((new CloseGripper(intake)).andThen(new LowerIntake(intake)).andThen(new FullRetractArm(this))).unless(() -> this.extendLimitThreshold < pos)
             // Then, drive the shoulder to the specified position
@@ -200,7 +201,7 @@ public class Arm extends SubsystemBase {
         return (new CloseGripper(intake))
             .andThen(new LowerIntake(intake))
             .andThen(new FullRetractArm(this))
-            .andThen(new WaitCommand(2.0))
+            .andThen(new WaitCommand(0.75))
             .andThen(new ShoulderDriveToPosition(this, 0));
     }
 

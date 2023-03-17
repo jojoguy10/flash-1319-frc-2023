@@ -17,9 +17,9 @@ public class ExtendArmToPos extends CommandBase {
         arm.setTelescopePos(pos);
     }
 
-   // @Override
-    //public boolean isFinished() {
-        // Is the arm within 4 units of the goal
-        //return Math.abs(arm.getTelePos()-pos) < 4;
-    //}
+    @Override
+    public boolean isFinished() {
+        //Is the arm within 4 units of the goal
+        return Math.abs(arm.getTelePos()-pos) < 4;
+    }
 }
