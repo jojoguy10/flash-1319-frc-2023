@@ -30,7 +30,7 @@ public class Drivetrain extends SubsystemBase {
     private boolean brake = false;
     private boolean shifter = false;
     private Solenoid m_shifter = new Solenoid(10, PneumaticsModuleType.REVPH, 1);
-    private Solenoid m_brake = new Solenoid(10, PneumaticsModuleType.REVPH, 4);
+    //private Solenoid m_brake = new Solenoid(10, PneumaticsModuleType.REVPH, 4);
 
     public PigeonIMU imu;
     public double startPitch;
@@ -95,14 +95,14 @@ public class Drivetrain extends SubsystemBase {
         m_shifter.set(shifter);
 
          
-     if(Driver.getBButtonPressed()){
+     /*if(Driver.getBButtonPressed()){
         if(brake == true){
             brake = false;
         }else{
             brake = true;
         }
-      }
-      m_brake.set(brake);
+      }*/
+      //m_brake.set(brake);
     }
 
     @Override
