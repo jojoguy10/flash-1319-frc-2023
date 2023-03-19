@@ -51,6 +51,7 @@ import frc.robot.subsystems.Arm.TelePreset;
 public class Robot extends TimedRobot {
   private final static String kDefaultAuto = "Drive Forward";
   private final static String kCustomAuto = "Balance Auto";
+  private final static String kCubeAuto = "Cube Auto";
   private String m_autoSelected;
   private SendableChooser<String> m_chooser = new SendableChooser<>();
   // Drive base Motors
@@ -107,6 +108,7 @@ public class Robot extends TimedRobot {
 
     m_chooser.addOption(kCustomAuto, kCustomAuto);
     m_chooser.setDefaultOption(kDefaultAuto, kDefaultAuto);
+    m_chooser.addOption(kCubeAuto, kCubeAuto);
     SmartDashboard.putData(m_chooser);
 
     drivetrain.startPitch = drivetrain.imu.getRoll();
@@ -124,7 +126,10 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    m_Compressor.enableDigital();
+    if(arm.getArmAngle() > 2.0 && arm.getArmAngle() < 35) {
+      intake.closeGripper();
+    }
+    //m_Compressor.enableDigital();
     CommandScheduler.getInstance().run();
   }
 
@@ -161,6 +166,9 @@ public class Robot extends TimedRobot {
       default:
       (new DriveDistance(drivetrain, 350)).schedule();
         // Put default auto code here
+        break;
+      case kCubeAuto:
+        (drivetrain.cubeAuto(arm, intake)).schedule();
         break;
     }
   }

@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.sensors.PigeonIMU;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxPIDController;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -17,6 +18,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.DriveDistance;
 import frc.robot.commands.arm.BalanceCommand;
 import frc.robot.commands.arm.DriveBackwards;
+import frc.robot.commands.arm.ExtendArmToPos;
+import frc.robot.commands.arm.ToggleGripper;
+import frc.robot.subsystems.Arm.TelePreset;
 
 public class Drivetrain extends SubsystemBase {
     private CANSparkMax leftMotor1 = new CANSparkMax(1, MotorType.kBrushless);
@@ -25,7 +29,7 @@ public class Drivetrain extends SubsystemBase {
     private CANSparkMax rightMotor2 = new CANSparkMax(4, MotorType.kBrushless);
 
     private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1, rightMotor1);
-    private SlewRateLimiter xLimiter = new SlewRateLimiter(1.0), zLimiter = new SlewRateLimiter(1.0);
+    private SlewRateLimiter xLimiter = new SlewRateLimiter(2.0), zLimiter = new SlewRateLimiter(99.0);
 
     private boolean brake = false;
     private boolean shifter = false;
@@ -36,8 +40,12 @@ public class Drivetrain extends SubsystemBase {
     public double startPitch;
 
     public Drivetrain() {
+        rightMotor1.setIdleMode(IdleMode.kCoast);
+        rightMotor2.setIdleMode(IdleMode.kCoast);
         leftMotor1.setInverted(true);
+        leftMotor1.setIdleMode(IdleMode.kCoast);
         leftMotor2.setInverted(true);
+        leftMotor2.setIdleMode(IdleMode.kCoast);
 
         double p = 0;
         double i = 0;
@@ -80,7 +88,7 @@ public class Drivetrain extends SubsystemBase {
 
     public void teleopPeriodic(XboxController Driver, XboxController Operator) {
         double x = xLimiter.calculate(-Driver.getLeftY());
-        double z = zLimiter.calculate(-Driver.getRightX());
+        double z = zLimiter.calculate(-Driver.getRightX()*0.6);
         robotDrive.arcadeDrive(x, z);
 
         // Driver Controls
@@ -107,12 +115,20 @@ public class Drivetrain extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putNumber("Base Encoder", leftMotor1.getEncoder().getPosition());
+        SmartDashboard.putNumber("Base Encoder", rightMotor1.getEncoder().getPosition());
         SmartDashboard.putNumber("Base Distance", getDistance());
         SmartDashboard.putNumber("Corrected pitch", imu.getRoll() - startPitch);
     }
 
     public Command balanceAuto() {
         return new DriveBackwards(this, 200).andThen(new BalanceCommand(this));
+    }
+
+    public Command cubeAuto(Arm arm, IntakeSubsystem intakeSubsystem) {
+        return new DriveBackwards(this, 50)
+        .andThen(arm.createDriveArmCommand(intakeSubsystem, 120, TelePreset.HIGH))
+        .andThen(new ExtendArmToPos(arm, 40))
+        .andThen(new ToggleGripper(intakeSubsystem))
+        .andThen(arm.fullLowerCommands(intakeSubsystem));
     }
 }

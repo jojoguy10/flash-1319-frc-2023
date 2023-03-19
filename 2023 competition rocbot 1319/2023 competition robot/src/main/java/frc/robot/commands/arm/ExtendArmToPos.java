@@ -12,6 +12,11 @@ public class ExtendArmToPos extends CommandBase {
         this.pos = pos.telePos;
     }
 
+    public ExtendArmToPos(Arm arm, double pos) {
+        this.arm = arm;
+        this.pos = pos;
+    }
+
     @Override
     public void initialize() {
         arm.setTelescopePos(pos);

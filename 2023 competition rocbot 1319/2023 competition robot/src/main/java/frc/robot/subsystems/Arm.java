@@ -186,9 +186,8 @@ public class Arm extends SubsystemBase {
 
     public Command createDriveArmCommand(IntakeSubsystem intake, double pos, TelePreset extendPos) {
         return 
-            (new LowerIntake(intake))
-            .andThen(new CloseGripper(intake))
-            .andThen(new WaitCommand(0.75))
+            ((new CloseGripper(intake))
+            .andThen(new WaitCommand(0.4))).unless(() -> intake.gripperClosedTime > 0.5)
              // Retract the arm unless it is above the point where it does not need to be retracted
             //((new CloseGripper(intake)).andThen(new LowerIntake(intake)).andThen(new FullRetractArm(this))).unless(() -> this.extendLimitThreshold < pos)
             // Then, drive the shoulder to the specified position
@@ -199,9 +198,8 @@ public class Arm extends SubsystemBase {
 
     public Command fullLowerCommands(IntakeSubsystem intake) {
         return (new CloseGripper(intake))
-            .andThen(new LowerIntake(intake))
             .andThen(new FullRetractArm(this))
-            .andThen(new WaitCommand(0.75))
+            .andThen((new WaitCommand(0.25)).unless(() -> (intake.gripperClosedTime > 0.25)))
             .andThen(new ShoulderDriveToPosition(this, 0));
     }
 
