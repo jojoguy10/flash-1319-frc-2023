@@ -80,9 +80,9 @@ public class Arm extends SubsystemBase {
         pidShoulder.setOutputRange(-1.0, 1.0);
 
         // Setup the PID for the telescoping motor
-        double teleP = 0.02;
+        double teleP = 0.04;
         double teleI = 0.00001;
-        double teleD = 0.00;
+        double teleD = 0.004;
         SparkMaxPIDController pidTele = telescopingM1.getPIDController();
         pidTele.setP(teleP);
         pidTele.setI(teleI);

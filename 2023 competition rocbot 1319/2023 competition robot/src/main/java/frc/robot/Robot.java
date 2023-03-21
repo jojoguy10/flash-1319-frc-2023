@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveDistance;
 import frc.robot.commands.arm.RunArm;
 import frc.robot.commands.arm.RunIntake;
+import frc.robot.commands.arm.ToggleBrakeCommand;
 import frc.robot.commands.arm.ToggleGripper;
 import frc.robot.commands.arm.ToggleIntake;
 import frc.robot.subsystems.Arm;
@@ -75,6 +76,7 @@ public class Robot extends TimedRobot {
   private final XboxController Driver = new XboxController(0);
   private final XboxController Operator = new XboxController(1);
   private final CommandXboxController OperatorCommand = new CommandXboxController(1);
+  private final CommandXboxController DriverCommand = new CommandXboxController(0);
   //private final UsbCamera cameraA = CameraServer.startAutomaticCapture(0);
   //private final UsbCamera cameraB = CameraServer.startAutomaticCapture(1);
   /**
@@ -91,6 +93,7 @@ public class Robot extends TimedRobot {
     OperatorCommand.povRight().onTrue(arm.createDriveArmCommand(intake, Arm.armMidPos, TelePreset.MID));
     OperatorCommand.rightTrigger(0.75).onTrue(new ToggleGripper(intake));
     OperatorCommand.rightBumper().onTrue(new ToggleIntake(intake));
+    DriverCommand.a().onTrue(new ToggleBrakeCommand(drivetrain));
     /*OperatorCommand.start().onTrue(new InstantCommand(() -> {
       if(useCameraA) {
         CameraServer.getServer().setSource(cameraA);

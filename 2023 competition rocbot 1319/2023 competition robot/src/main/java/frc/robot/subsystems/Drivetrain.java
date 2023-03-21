@@ -15,10 +15,12 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.DriveDistance;
 import frc.robot.commands.arm.BalanceCommand;
 import frc.robot.commands.arm.DriveBackwards;
 import frc.robot.commands.arm.ExtendArmToPos;
+import frc.robot.commands.arm.ToggleBrakeCommand;
 import frc.robot.commands.arm.ToggleGripper;
 import frc.robot.subsystems.Arm.TelePreset;
 
@@ -31,7 +33,7 @@ public class Drivetrain extends SubsystemBase {
     private DifferentialDrive robotDrive = new DifferentialDrive(leftMotor1, rightMotor1);
     private SlewRateLimiter xLimiter = new SlewRateLimiter(2.0), zLimiter = new SlewRateLimiter(99.0);
 
-    private boolean brake = false;
+    public boolean brakeMode = false;
     private boolean shifter = false;
     private Solenoid m_shifter = new Solenoid(10, PneumaticsModuleType.REVPH, 1);
     //private Solenoid m_brake = new Solenoid(10, PneumaticsModuleType.REVPH, 4);
@@ -118,17 +120,33 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putNumber("Base Encoder", rightMotor1.getEncoder().getPosition());
         SmartDashboard.putNumber("Base Distance", getDistance());
         SmartDashboard.putNumber("Corrected pitch", imu.getRoll() - startPitch);
+        SmartDashboard.putBoolean("Brake Mode", brakeMode);
+        if(brakeMode) {
+            leftMotor1.setIdleMode(IdleMode.kBrake);
+            leftMotor2.setIdleMode(IdleMode.kBrake);
+            rightMotor1.setIdleMode(IdleMode.kBrake);
+            rightMotor2.setIdleMode(IdleMode.kBrake);
+        } else {
+            leftMotor1.setIdleMode(IdleMode.kCoast);
+            leftMotor2.setIdleMode(IdleMode.kCoast);
+            rightMotor1.setIdleMode(IdleMode.kCoast);
+            rightMotor2.setIdleMode(IdleMode.kCoast);
+        }
     }
 
     public Command balanceAuto() {
-        return new DriveBackwards(this, 200).andThen(new BalanceCommand(this));
+        return (new ToggleBrakeCommand(this)).andThen(new DriveBackwards(this, 200)).andThen(new BalanceCommand(this));
     }
 
     public Command cubeAuto(Arm arm, IntakeSubsystem intakeSubsystem) {
-        return new DriveBackwards(this, 50)
-        .andThen(arm.createDriveArmCommand(intakeSubsystem, 120, TelePreset.HIGH))
-        .andThen(new ExtendArmToPos(arm, 40))
+        return //new DriveBackwards(this, 50)
+        /*.andThen*/(arm.createDriveArmCommand(intakeSubsystem, 120, TelePreset.HIGH))
+        .andThen(new ExtendArmToPos(arm, 100))
         .andThen(new ToggleGripper(intakeSubsystem))
-        .andThen(arm.fullLowerCommands(intakeSubsystem));
+        .andThen(new WaitCommand(2))
+        .andThen(arm.fullLowerCommands(intakeSubsystem))
+        .andThen(new ToggleBrakeCommand(this))
+        .andThen(new DriveBackwards(this, 150))
+        .andThen(new BalanceCommand(this));
     }
 }

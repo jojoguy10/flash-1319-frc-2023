@@ -18,8 +18,8 @@ public class IntakeSubsystem extends SubsystemBase {
     boolean gripperDebounce;
     public double gripperClosedTime = 0;
     // Intake Motors
-    private final CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushed);
-    private final CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushed);
+    //private final CANSparkMax intakeM1 = new CANSparkMax(7, MotorType.kBrushed);
+    //private final CANSparkMax intakeM2 = new CANSparkMax(8, MotorType.kBrushed);
     boolean intakeRunning;
     public IntakeSubsystem() {
         //intakeM2.setInverted(true);
